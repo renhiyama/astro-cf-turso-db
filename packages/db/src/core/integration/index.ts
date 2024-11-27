@@ -31,7 +31,12 @@ import {
 	vitePluginDb,
 } from './vite-plugin-db.js';
 
-function astroDBIntegration(): AstroIntegration {
+type DBOptions = {
+	remoteClient?: 'native' | 'web';
+};
+
+function astroDBIntegration(options?: DBOptions): AstroIntegration {
+	const { remoteClient = 'native' } = options || {};
 	let connectToRemote = false;
 	let configFileDependencies: string[] = [];
 	let root: URL;
@@ -77,7 +82,7 @@ function astroDBIntegration(): AstroIntegration {
 				if (connectToRemote) {
 					appToken = await getManagedRemoteToken();
 					dbPlugin = vitePluginDb({
-						connectToStudio: connectToRemote,
+						connectToRemote: true,
 						appToken: appToken.token,
 						tables,
 						root: config.root,
@@ -87,7 +92,7 @@ function astroDBIntegration(): AstroIntegration {
 					});
 				} else {
 					dbPlugin = vitePluginDb({
-						connectToStudio: false,
+						connectToRemote: false,
 						tables,
 						seedFiles,
 						root: config.root,

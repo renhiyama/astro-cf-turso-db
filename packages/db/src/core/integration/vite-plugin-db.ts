@@ -34,7 +34,7 @@ export type SeedHandler = {
 
 type VitePluginDBParams =
 	| {
-			connectToStudio: false;
+			connectToRemote: false;
 			tables: LateTables;
 			seedFiles: LateSeedFiles;
 			srcDir: URL;
@@ -44,7 +44,7 @@ type VitePluginDBParams =
 			seedHandler: SeedHandler;
 	  }
 	| {
-			connectToStudio: true;
+			connectToRemote: true;
 			tables: LateTables;
 			appToken: string;
 			srcDir: URL;
@@ -71,8 +71,8 @@ export function vitePluginDb(params: VitePluginDBParams): VitePlugin {
 		async load(id) {
 			if (id !== resolved.module && id !== resolved.importedFromSeedFile) return;
 
-			if (params.connectToStudio) {
-				return getStudioVirtualModContents({
+			if (params.connectToRemote) {
+				return getRemoteVirtualModContents({
 					appToken: params.appToken,
 					tables: params.tables.get(),
 					isBuild: command === 'build',
@@ -138,16 +138,18 @@ export * from ${RUNTIME_VIRTUAL_IMPORT};
 ${getStringifiedTableExports(tables)}`;
 }
 
-export function getStudioVirtualModContents({
+export function getRemoteVirtualModContents({
 	tables,
 	appToken,
 	isBuild,
 	output,
+	remoteClientMode,
 }: {
 	tables: DBTables;
 	appToken: string;
 	isBuild: boolean;
 	output: AstroConfig['output'];
+	remoteClientMode?: 'native' | 'web';
 }) {
 	const dbInfo = getRemoteDatabaseInfo();
 
@@ -186,6 +188,7 @@ export const db = await createRemoteDatabaseClient({
   dbType: ${JSON.stringify(dbInfo.type)},
   remoteUrl: ${dbUrlArg()},
   appToken: ${appTokenArg()},
+	remoteClientMode: ${JSON.stringify(remoteClientMode)},
 });
 
 export * from ${RUNTIME_VIRTUAL_IMPORT};
